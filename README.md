@@ -4,5 +4,5 @@
 游戏版本1.21.11 fabric  
 
 
-更新高度检测log 扫图鞘翅模式SpiralFlight 修改于https://github.com/sw1562776/milky-addon/  
-游戏内标点模块借鉴 mikumiku7/meteor-miku的ElytraFinder
+更新高度检测log模块 扫图鞘翅模式SpiralFlight 修改于https://github.com/sw1562776/milky-addon/  
+更新游戏内标点模块  借鉴 mikumiku7/meteor-miku的ElytraFinder
