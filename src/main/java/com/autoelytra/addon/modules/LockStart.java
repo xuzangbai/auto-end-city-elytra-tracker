@@ -143,6 +143,8 @@ public class LockStart extends Module {
         if (eif != null && eif.isActive()) eif.toggle();
         ElytraFly ef = Modules.get().get(ElytraFly.class);
         if (ef != null && ef.isActive()) ef.toggle();
+        SpiralFlight sf = Modules.get().get(SpiralFlight.class);
+        if (sf != null && sf.isActive()) sf.toggle();
 
         return true;
     }

@@ -28,6 +28,14 @@ public class LockEnd extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private enum Mode { WaypointLock, SpiralFlight }
+    private final Setting<Mode> mode = sgGeneral.add(new EnumSetting.Builder<Mode>()
+        .name("mode")
+        .description("到达后开启的功能")
+        .defaultValue(Mode.WaypointLock)
+        .build()
+    );
+
     private final Setting<Integer> aimAbove = sgGeneral.add(new IntSetting.Builder()
         .name("aim-above")
         .description("在目标坐标上方多少格创建锁定点")
@@ -121,9 +129,14 @@ public class LockEnd extends Module {
             arrived = true;
             writeBlacklist();
             info("已到达锁定点，写入Lockblacklist，启动后续流程");
-            // Immediately open WaypointLock + ElytraInfiniteFlight
-            WaypointLock wl = Modules.get().get(WaypointLock.class);
-            if (wl != null && !wl.isActive()) wl.toggle();
+            // Open mode-specific module + ElytraInfiniteFlight
+            if (mode.get() == Mode.SpiralFlight) {
+                SpiralFlight sf = Modules.get().get(SpiralFlight.class);
+                if (sf != null && !sf.isActive()) sf.toggle();
+            } else {
+                WaypointLock wl = Modules.get().get(WaypointLock.class);
+                if (wl != null && !wl.isActive()) wl.toggle();
+            }
             ElytraInfiniteFlight eif = Modules.get().get(ElytraInfiniteFlight.class);
             if (eif != null && !eif.isActive()) eif.toggle();
             sequenceTimer = 0;

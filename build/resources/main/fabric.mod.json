@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "autoelytra",
+  "version": "1.21.1-1.2",
+  "name": "AutoElytraV1",
+  "description": "AutoElytra addon for Meteor Client.",
+  "authors": [
+    "Baeya"
+  ],
+  "contact": {
+    "sources": "https://github.com/xuzangbai/auto-end-city-elytra-tracker"
+  },
+  "icon": "assets/template/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "meteor": [
+      "com.autoelytra.addon.AddonTemplate"
+    ]
+  },
+  "mixins": [
+    "autoelytra.mixins.json"
+  ],
+  "custom": {
+    "meteor-client:color": "225,25,25",
+    "modmenu": {
+      "parent": {
+        "id": "meteor-client"
+      }
+    }
+  },
+  "depends": {
+    "java": ">=21",
+    "minecraft": ["1.21.11"],
+    "meteor-client": "*"
+  }
+}

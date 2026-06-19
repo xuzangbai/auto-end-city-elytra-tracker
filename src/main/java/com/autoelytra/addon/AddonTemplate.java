@@ -7,10 +7,13 @@ import com.autoelytra.addon.modules.ItemFrameSearch;
 import com.autoelytra.addon.modules.LadderFinder;
 import com.autoelytra.addon.modules.LockEnd;
 import com.autoelytra.addon.modules.LockStart;
+import com.autoelytra.addon.modules.MinHeightLog;
 import com.autoelytra.addon.modules.ModuleExample;
 import com.autoelytra.addon.modules.Run;
+import com.autoelytra.addon.modules.SpiralFlight;
 import com.autoelytra.addon.modules.StowElytra;
 import com.autoelytra.addon.modules.StoreResupply;
+import com.autoelytra.addon.modules.ElytraFinder;
 import com.autoelytra.addon.modules.WaypointLock;
 import com.autoelytra.addon.modules.WaypointReader;
 import com.mojang.logging.LogUtils;
@@ -44,6 +47,9 @@ public class AddonTemplate extends MeteorAddon {
         Modules.get().add(new StoreResupply());
         Modules.get().add(new StowElytra());
         Modules.get().add(new Run());
+        Modules.get().add(new SpiralFlight());
+        Modules.get().add(new MinHeightLog());
+        Modules.get().add(new ElytraFinder());
 
         // Commands
         Commands.add(new CommandExample());

@@ -25,6 +25,10 @@ repositories {
         name = "meteor-maven-snapshots"
         url = uri("https://maven.meteordev.org/snapshots")
     }
+    maven {
+        name = "seedfinding-maven"
+        url = uri("https://maven.seedfinding.com")
+    }
 }
 
 dependencies {
@@ -35,6 +39,13 @@ dependencies {
 
     // Meteor
     modImplementation(libs.meteor.client)
+    implementation("com.seedfinding:mc_math:1.171.0")     { isTransitive = false }
+    implementation("com.seedfinding:mc_seed:1.171.1")     { isTransitive = false }
+    implementation("com.seedfinding:mc_core:1.210.0")     { isTransitive = false }
+    implementation("com.seedfinding:mc_noise:1.171.1")    { isTransitive = false }
+    implementation("com.seedfinding:mc_biome:1.171.1")    { isTransitive = false }
+    implementation("com.seedfinding:mc_terrain:1.171.1")  { isTransitive = false }
+    implementation("com.seedfinding:mc_feature:1.171.11") { isTransitive = false }
 }
 
 tasks {
