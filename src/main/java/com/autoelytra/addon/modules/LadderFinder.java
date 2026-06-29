@@ -426,8 +426,7 @@ public class LadderFinder extends Module {
         try {
             Files.deleteIfExists(TIZI_DIR.resolve(world).resolve("zuobiao.json"));
             Files.deleteIfExists(TIZI_DIR.resolve(world).resolve("short_zuobiao.json"));
-            Files.deleteIfExists(TIZI_DIR.resolve(world).resolve("Lockblacklist.json"));
-            info("已清除 " + TIZI_DIR.resolve(world).resolve("zuobiao.json") + " & Lockblacklist.json");
+            info("已清除 " + TIZI_DIR.resolve(world).resolve("zuobiao.json"));
         } catch (IOException e) {
             error("清除失败: " + e.getMessage());
         }

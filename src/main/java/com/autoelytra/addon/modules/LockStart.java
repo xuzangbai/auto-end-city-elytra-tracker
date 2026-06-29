@@ -45,14 +45,14 @@ public class LockStart extends Module {
     private final Setting<Integer> descendHeight = sgGeneral.add(new IntSetting.Builder()
         .name("descend-height")
         .description("距锁定点Y轴此范围内进入下降模式")
-        .defaultValue(10).min(2).max(50)
+        .defaultValue(3).min(2).max(50)
         .build()
     );
 
     private final Setting<Integer> arriveDistance = sgGeneral.add(new IntSetting.Builder()
         .name("arrive-distance")
         .description("距梯子链坐标XZ此范围内关闭模块")
-        .defaultValue(1).min(1).max(20)
+        .defaultValue(3).min(1).max(20)
         .build()
     );
 
@@ -66,14 +66,14 @@ public class LockStart extends Module {
     private final Setting<Boolean> autoFirework = sgGeneral.add(new BoolSetting.Builder()
         .name("auto-firework")
         .description("玩家高度低于锁定点时自动释放烟花")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
 
     private final Setting<Integer> fireworkInterval = sgGeneral.add(new IntSetting.Builder()
         .name("firework-interval")
         .description("烟花释放间隔(tick)，20=1秒")
-        .defaultValue(80).min(10).sliderMax(200)
+        .defaultValue(60).min(10).sliderMax(200)
         .visible(autoFirework::get)
         .build()
     );
@@ -81,7 +81,7 @@ public class LockStart extends Module {
     private final Setting<Boolean> quickSwap = sgGeneral.add(new BoolSetting.Builder()
         .name("quick-swap")
         .description("从背包任意位置切换烟花（不只是快捷栏）")
-        .defaultValue(false)
+        .defaultValue(true)
         .visible(autoFirework::get)
         .build()
     );

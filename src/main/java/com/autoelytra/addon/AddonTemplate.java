@@ -2,18 +2,19 @@ package com.autoelytra.addon;
 
 import com.autoelytra.addon.commands.CommandExample;
 import com.autoelytra.addon.hud.HudExample;
+import com.autoelytra.addon.modules.ElytraFinder;
 import com.autoelytra.addon.modules.ElytraInfiniteFlight;
 import com.autoelytra.addon.modules.ItemFrameSearch;
 import com.autoelytra.addon.modules.LadderFinder;
 import com.autoelytra.addon.modules.LockEnd;
 import com.autoelytra.addon.modules.LockStart;
 import com.autoelytra.addon.modules.MinHeightLog;
-import com.autoelytra.addon.modules.ModuleExample;
+import com.autoelytra.addon.modules.Off;
+import com.autoelytra.addon.modules.PacketMine;
 import com.autoelytra.addon.modules.Run;
 import com.autoelytra.addon.modules.SpiralFlight;
 import com.autoelytra.addon.modules.StowElytra;
 import com.autoelytra.addon.modules.StoreResupply;
-import com.autoelytra.addon.modules.ElytraFinder;
 import com.autoelytra.addon.modules.WaypointLock;
 import com.autoelytra.addon.modules.WaypointReader;
 import com.mojang.logging.LogUtils;
@@ -36,7 +37,6 @@ public class AddonTemplate extends MeteorAddon {
         LOG.info("Initializing AutoElytraV1");
 
         // Modules
-        Modules.get().add(new ModuleExample());
         Modules.get().add(new WaypointReader());
         Modules.get().add(new WaypointLock());
         Modules.get().add(new LadderFinder());
@@ -50,6 +50,8 @@ public class AddonTemplate extends MeteorAddon {
         Modules.get().add(new SpiralFlight());
         Modules.get().add(new MinHeightLog());
         Modules.get().add(new ElytraFinder());
+        Modules.get().add(new PacketMine());
+        Modules.get().add(new Off());
 
         // Commands
         Commands.add(new CommandExample());

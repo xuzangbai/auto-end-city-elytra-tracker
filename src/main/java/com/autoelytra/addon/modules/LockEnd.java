@@ -39,28 +39,28 @@ public class LockEnd extends Module {
     private final Setting<Integer> aimAbove = sgGeneral.add(new IntSetting.Builder()
         .name("aim-above")
         .description("在目标坐标上方多少格创建锁定点")
-        .defaultValue(40).min(10).sliderMax(200)
+        .defaultValue(135).min(10).sliderMax(200)
         .build()
     );
 
     private final Setting<Integer> arriveDistance = sgGeneral.add(new IntSetting.Builder()
         .name("arrive-distance")
         .description("距锁定点此范围内写入黑名单并关闭")
-        .defaultValue(2).min(1).max(20)
+        .defaultValue(4).min(1).max(20)
         .build()
     );
 
     private final Setting<Boolean> autoFirework = sgGeneral.add(new BoolSetting.Builder()
         .name("auto-firework")
         .description("玩家高度低于锁定点时自动释放烟花")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
 
     private final Setting<Integer> fireworkInterval = sgGeneral.add(new IntSetting.Builder()
         .name("firework-interval")
         .description("烟花释放间隔(tick)，20=1秒")
-        .defaultValue(80).min(10).sliderMax(200)
+        .defaultValue(60).min(10).sliderMax(200)
         .visible(autoFirework::get)
         .build()
     );
@@ -68,7 +68,7 @@ public class LockEnd extends Module {
     private final Setting<Boolean> quickSwap = sgGeneral.add(new BoolSetting.Builder()
         .name("quick-swap")
         .description("从背包任意位置切换烟花")
-        .defaultValue(false)
+        .defaultValue(true)
         .visible(autoFirework::get)
         .build()
     );

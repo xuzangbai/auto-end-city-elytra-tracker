@@ -66,7 +66,7 @@ public class ElytraInfiniteFlight extends Module {
     private final Setting<Double> targetHeight = sgGeneral.add(new DoubleSetting.Builder()
         .name("target-height")
         .description("When the player reaches this Y level, switch to ElytraFly Pitch40 and disable this module.")
-        .defaultValue(200.0).min(64.0).max(1000.0)
+        .defaultValue(1250).min(64.0).max(1500.0)
         .build()
     );
 
