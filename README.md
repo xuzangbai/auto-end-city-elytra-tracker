@@ -7,6 +7,19 @@
 更新高度检测log模块 扫图鞘翅模式SpiralFlight 修改于https://github.com/sw1562776/milky-addon/  
 更新游戏内标点模块  借鉴 mikumiku7/meteor-miku的ElytraFinder  
 参数建议  
+添加了主页背景功能  
+
+添加发包挖掘grim可用  
+
+添加强制停止模块  
+
+优化默认参数  
+
+优化补给以及鞘翅存放的放置和挖掘  
+
+优化路径点渲染连线，添加了Christofides计算模式  
+
+现在清除缓存不在清除黑名单，现在所有黑名单全部改为手动清除
 
 <img width="742" height="746" alt="077a75bb6884e80004bd520310cc6add" src="https://github.com/user-attachments/assets/d30fece8-c82a-4dbc-bb29-37a63997986e" />
 <img width="545" height="543" alt="61b956d110c0d3721367ca13f84ba88d" src="https://github.com/user-attachments/assets/e2266e72-35f2-4575-b3f7-c6735e79434f" />
