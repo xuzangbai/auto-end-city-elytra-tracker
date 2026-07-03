@@ -272,7 +272,7 @@ public class StoreResupply extends Module {
 
     // ── MINE_BOX ── 用 PacketMine 挖掉放置的盒子
     void mb() {
-        if (placedPos == null) { info("跳过挖盒"); s = S.PICKUP; t = 0; pu(); return; }
+        if (placedPos == null) { info("未放盒，跳过清理"); done(); return; }
         if (mc.world.isAir(placedPos) || mc.world.getBlockState(placedPos).isReplaceable()) {
             info("盒子已消失"); s = S.PICKUP; t = 0; pu(); return;
         }
