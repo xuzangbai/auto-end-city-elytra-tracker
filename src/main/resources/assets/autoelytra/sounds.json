@@ -4,5 +4,8 @@
   },
   "meihezi": {
     "sounds": [ "autoelytra:meihezi" ]
+  },
+  "xunluend": {
+    "sounds": [ "autoelytra:xunluend" ]
   }
 }

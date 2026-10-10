@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.fabric.loom)
 }
 
+
 loom {
     runConfigs {
         named("client") {
@@ -25,6 +26,10 @@ repositories {
         name = "meteor-maven-snapshots"
         url = uri("https://maven.meteordev.org/snapshots")
     }
+    maven {
+        name = "seedfinding-maven"
+        url = uri("https://maven.seedfinding.com")
+    }
 }
 
 dependencies {
@@ -35,7 +40,25 @@ dependencies {
 
     // Meteor
     modImplementation(libs.meteor.client)
+    // Seedfinding (jar-in-jar)
+    // NOTE: the library has an int-overflow bug in EndHeightLayer.getNoiseValueAt
+    // (root cause of the End void rings, MC-159283). After build, run
+    // scripts/patch-mc-biome.ps1 to swap that class inside the nested mc_biome jar
+    // with the patched one from libs/mc_biome-patch/.
+    listOf(
+        "com.seedfinding:mc_math:1.171.0",
+        "com.seedfinding:mc_seed:1.171.1",
+        "com.seedfinding:mc_core:1.210.0",
+        "com.seedfinding:mc_noise:1.171.1",
+        "com.seedfinding:mc_biome:1.171.1",
+        "com.seedfinding:mc_terrain:1.171.1",
+        "com.seedfinding:mc_feature:1.171.11"
+    ).forEach { dep ->
+        include(implementation(dep) { isTransitive = false })
+    }
 }
+
+
 
 tasks {
     processResources {

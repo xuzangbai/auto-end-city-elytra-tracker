@@ -3,7 +3,11 @@
   "package": "com.autoelytra.addon.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "ExampleMixin"
+    "ExampleMixin",
+    "TitleScreenMixin",
+    "ScreenBackgroundMixin",
+    "ClientWorldAccessor",
+    "PlayerInventoryAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

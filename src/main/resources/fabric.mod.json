@@ -8,7 +8,7 @@
     "Baeya"
   ],
   "contact": {
-    "sources": "https://github.com/MeteorDevelopment/meteor-addon-template"
+    "sources": "https://github.com/xuzangbai/auto-end-city-elytra-tracker"
   },
   "icon": "assets/template/icon.png",
   "environment": "client",
