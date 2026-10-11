@@ -28,7 +28,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  * and activates Meteor's built-in ElytraFly in Pitch40 mode for altitude cruising.</p>
  */
 public class ElytraInfiniteFlight extends Module {
-    private enum Phase { DIVE, PULL_UP }
+    private enum Phase { DIVE, PULL_UP, GLIDE }
 
     // ── Settings ───────────────────────────────────────────────────────
 
@@ -67,6 +67,46 @@ public class ElytraInfiniteFlight extends Module {
         .name("target-height")
         .description("When the player reaches this Y level, switch to ElytraFly Pitch40 and disable this module.")
         .defaultValue(1250).min(64.0).max(1500.0)
+        .build()
+    );
+
+    private final Setting<Boolean> enablePitch40 = sgGeneral.add(new BoolSetting.Builder()
+        .name("enable-elytrafly-pitch40")
+        .description("到达目标高度后：开启=关闭本功能并开启彗星本体的 ElytraFly(Pitch40)；关闭=不碰彗星，本功能继续")
+        .defaultValue(false)
+        .build()
+    );
+
+    // ── Glide mode ─────────────────────────────────────────────────────
+
+    private final Setting<Boolean> glideMode = sgGeneral.add(new BoolSetting.Builder()
+        .name("glide-mode")
+        .description("滑翔模式：高度达到滑翔起始高度时停止无限飞行，改为固定角度向下滑翔，降到滑翔结束高度后恢复无限飞行")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Double> glideAngle = sgGeneral.add(new DoubleSetting.Builder()
+        .name("glide-angle")
+        .description("滑翔时的俯仰角（正=向下）")
+        .defaultValue(11.0).min(1.0).max(45.0)
+        .visible(glideMode::get)
+        .build()
+    );
+
+    private final Setting<Double> glideStartHeight = sgGeneral.add(new DoubleSetting.Builder()
+        .name("glide-start-height")
+        .description("升到这个高度时开始滑翔")
+        .defaultValue(450).min(64.0).max(1500.0)
+        .visible(glideMode::get)
+        .build()
+    );
+
+    private final Setting<Double> glideEndHeight = sgGeneral.add(new DoubleSetting.Builder()
+        .name("glide-end-height")
+        .description("滑翔降到这个高度时恢复无限飞行")
+        .defaultValue(220).min(0.0).max(1500.0)
+        .visible(glideMode::get)
         .build()
     );
 
@@ -117,16 +157,35 @@ public class ElytraInfiniteFlight extends Module {
     private void onTick(TickEvent.Pre event) {
         if (mc.player == null) return;
 
+        double y = mc.player.getY();
+
+        // ── Glide mode ─────────────────────────────────────────────────
+        // 升到起始高度 → 停止无限飞行，改为固定角度向下滑翔
+        // 降到结束高度 → 退出滑翔，恢复无限飞行
+        if (glideMode.get()) {
+            if (phase != Phase.GLIDE && y >= glideStartHeight.get()) {
+                phase = Phase.GLIDE;
+            } else if (phase == Phase.GLIDE && y <= glideEndHeight.get()) {
+                phase = Phase.DIVE;
+                heightReached = false;      // 允许之后再触发一次 Pitch40 切换
+            }
+        } else if (phase == Phase.GLIDE) {
+            phase = Phase.DIVE;              // 关掉滑翔模式时立刻恢复
+        }
+
         // ── Height trigger: switch to ElytraFly Pitch40 ────────────────
-        if (!heightReached && mc.player.getY() >= targetHeight.get()) {
+        if (!heightReached && y >= targetHeight.get()) {
             heightReached = true;
-            switchToPitch40();
-            return;
+            switchToPitch40();      // 只做一次；本功能是否继续取决于开关
         }
 
         double hSpeed = horizontalSpeed();
 
         switch (phase) {
+            case GLIDE -> {
+                // 固定角度向下滑翔，不参与提速/拉升循环
+                smoothPitch(glideAngle.get().floatValue(), pullUpTransitionSpeed.get().floatValue());
+            }
             case DIVE -> {
                 smoothPitch(diveAngle.get().floatValue(), diveTransitionSpeed.get().floatValue());
                 if (hSpeed >= diveTargetSpeed.get()) {
@@ -145,10 +204,20 @@ public class ElytraInfiniteFlight extends Module {
     // ── Switch to Meteor ElytraFly Pitch40 ─────────────────────────────
 
     private void switchToPitch40() {
-        // Disable this module
+        // 开关关闭时：什么都不做（不开启彗星 ElytraFly，也不关闭本功能），本功能继续跑
+        if (!enablePitch40.get()) {
+            if (mc.player != null) {
+                mc.player.sendMessage(
+                    Text.literal("§a[ElytraInfiniteFlight] 达到预设高度（未开启彗星 ElytraFly，本功能继续）"),
+                    false
+                );
+            }
+            return;
+        }
+
+        // 开关打开时：关闭本功能，改为开启彗星本体的 ElytraFly（Pitch40 模式）
         this.toggle();
 
-        // Enable Meteor's built-in ElytraFly with Pitch40 mode
         ElytraFly elytraFly = Modules.get().get(ElytraFly.class);
         elytraFly.flightMode.set(ElytraFlightModes.Pitch40);
         if (!elytraFly.isActive()) {

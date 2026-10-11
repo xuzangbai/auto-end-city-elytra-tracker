@@ -48,6 +48,13 @@ public class LadderFinder extends Module {
         .build()
     );
 
+    private final Setting<Boolean> autoClearCache = sgGeneral.add(new BoolSetting.Builder()
+        .name("auto-clear-cache")
+        .description("每次启动功能时自动清除 zuobiao.json / short_zuobiao.json 缓存")
+        .defaultValue(true)
+        .build()
+    );
+
     private final Setting<Boolean> clearCache = sgGeneral.add(new BoolSetting.Builder()
         .name("clear-cache")
         .description("清除 zuobiao.json 缓存")
@@ -95,6 +102,7 @@ public class LadderFinder extends Module {
 
     @Override
     public void onActivate() {
+        if (mc.player == null || mc.world == null) { toggle(); return; }
         try { Files.createDirectories(TIZI_DIR); } catch (IOException ignored) {}
         synchronized (chunkLadders) {
             chunkLadders.clear();
@@ -105,6 +113,9 @@ public class LadderFinder extends Module {
         ticksSinceLastReport = 0;
         needsChainUpdate = false;
         lastReportedCount = -1;
+
+        // 启动功能时按开关自动清除本功能的缓存文件（默认关闭）
+        if (autoClearCache.get()) clearJsonCache();
 
         for (Chunk chunk : Utils.chunks()) {
             searchChunk(chunk);
@@ -422,11 +433,17 @@ public class LadderFinder extends Module {
 
     private void clearJsonCache() {
         String world = detectTiziWorld();
-        if (world == null) return;
+        if (world == null) { info("未识别世界，无法清除缓存文件"); return; }
         try {
-            Files.deleteIfExists(TIZI_DIR.resolve(world).resolve("zuobiao.json"));
-            Files.deleteIfExists(TIZI_DIR.resolve(world).resolve("short_zuobiao.json"));
-            info("已清除 " + TIZI_DIR.resolve(world).resolve("zuobiao.json"));
+            Path main = TIZI_DIR.resolve(world).resolve("zuobiao.json");
+            Path shortFile = TIZI_DIR.resolve(world).resolve("short_zuobiao.json");
+            boolean a = Files.deleteIfExists(main);
+            boolean b = Files.deleteIfExists(shortFile);
+            if (a || b) {
+                info("已清除缓存: " + (a ? "zuobiao.json " : "") + (b ? "short_zuobiao.json" : ""));
+            } else {
+                info("无缓存文件可清除 (" + world + ")");
+            }
         } catch (IOException e) {
             error("清除失败: " + e.getMessage());
         }

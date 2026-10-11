@@ -93,6 +93,13 @@ public class WaypointReader extends Module {
         .build()
     );
 
+    private final Setting<Boolean> renderOptimize = sgRender.add(new BoolSetting.Builder()
+        .name("路径点渲染优化")
+        .description("只绘制渲染距离内的线段部分。关掉则整条线一次性画完（路径点距离很远时会卡顿）")
+        .defaultValue(true)
+        .build()
+    );
+
     private final Setting<Integer> arrivalRange = sgGeneral.add(new IntSetting.Builder()
         .name("arrival-range")
         .description("到达此范围(格)内标记路径点为已访问")
@@ -233,6 +240,26 @@ public class WaypointReader extends Module {
     private void markVisited() {
         ensureStateLoaded();
         if (route.isEmpty() || mc.player == null) return;
+
+        // 自愈：队首若已经在黑名单里，说明状态错位（例如 route.json 与 visited.json
+        // 不同步、或路径点里有重复坐标）。此时下面的 if (!visitedXZ.contains(key))
+        // 永远不成立，整个分支被跳过 —— 队首会永远堵在第一位，后面的点全都走不到，
+        // 表现为"飞到点了也不加黑名单、不切下一个，来回飞也没用"。
+        // 直接把这类队首踢掉，让路线继续。
+        int skipped = 0;
+        while (!route.isEmpty()
+            && visitedXZ.contains(xzKey((int) route.get(0).x, (int) route.get(0).z))) {
+            Vec3d dead = route.remove(0);
+            skipped++;
+            System.out.println("[AutoElytra] 跳过已在黑名单的队首 " + (int) dead.x + "," + (int) dead.z);
+        }
+        if (skipped > 0) {
+            info("跳过 " + skipped + " 个已在黑名单的路径点，路线继续（剩余 " + route.size() + " 个）");
+            saveRoute();
+            if (route.isEmpty()) playCompletionSound();
+            return;
+        }
+
         int range = arrivalRange.get();
         double rangeSq = (double) range * range;
         Vec3d nearest = route.get(0);
@@ -280,6 +307,10 @@ public class WaypointReader extends Module {
         }
         if (!Files.isDirectory(dimDir)) { info("无末地文件夹: " + dimDir); return; }
         List<String> entries = new ArrayList<>();
+        // 同一坐标只保留一个：Xaero 里可能有同名/重复点，重复坐标会导致
+        // 一个副本被标黑后另一个副本永远堵在路线队首（判定永远进不去）
+        Map<Long, String> byCoord = new LinkedHashMap<>();
+        int duplicates = 0;
         try {
             for (Path file : (Iterable<Path>) Files.list(dimDir)::iterator) {
                 if (!file.getFileName().toString().endsWith(".txt")) continue;
@@ -291,7 +322,11 @@ public class WaypointReader extends Module {
                     if (p.length < 6) continue;
                     try {
                         int x = Integer.parseInt(p[3]), z = Integer.parseInt(p[5]);
-                        entries.add("  {\"name\":\"" + esc(p[1]) + "\",\"x\":" + x + ",\"z\":" + z + "}");
+                        long key = xzKey(x, z);
+                        if (byCoord.containsKey(key)) { duplicates++; continue; }
+                        String entry = "  {\"name\":\"" + esc(p[1]) + "\",\"x\":" + x + ",\"z\":" + z + "}";
+                        byCoord.put(key, entry);
+                        entries.add(entry);
                     } catch (NumberFormatException ignored) {}
                 }
             }
@@ -306,7 +341,8 @@ public class WaypointReader extends Module {
             route = Collections.emptyList();
             activeAlgorithm = null;
             loadVisited();
-            info("已保存 " + entries.size() + " 个路径点（已排除 " + visitedXZ.size() + " 个已访问点）");
+            info("已保存 " + entries.size() + " 个路径点（已排除 " + visitedXZ.size() + " 个已访问点"
+                + (duplicates > 0 ? "、" + duplicates + " 个重复坐标" : "") + "）");
         } catch (IOException e) { error("写入失败"); }
     }
 
@@ -560,6 +596,7 @@ public class WaypointReader extends Module {
         if (showRoute.get()) {
             SettingColor c = lineColor.get();
             double y = mc.player.getY() + 1.0;
+            boolean optimize = renderOptimize.get();
 
             List<Vec3d> renderPts = new ArrayList<>();
             renderPts.add(new Vec3d(px, y, pz));
@@ -573,8 +610,6 @@ public class WaypointReader extends Module {
             }
             for (int i = 0; i < renderPts.size() - 1; i++) {
                 Vec3d a = renderPts.get(i), b = renderPts.get(i + 1);
-                double dax = a.x - px, daz = a.z - pz, dbx = b.x - px, dbz = b.z - pz;
-                if (dax * dax + daz * daz > maxSq && dbx * dbx + dbz * dbz > maxSq) continue;
 
                 double dx = b.x - a.x, dz = b.z - a.z;
                 double len = Math.sqrt(dx * dx + dz * dz);
@@ -583,7 +618,32 @@ public class WaypointReader extends Module {
                 double ex = -uz * 0.12, ez = ux * 0.12;
                 double segY = (a.y + b.y) * 0.5;
                 double step = 0.1;
-                for (double t = 0; t < len; t += step) {
+
+                // 线段在渲染圈内的参数区间 [t1, t2]（t = 距 a 的方块数，0..len）
+                double t1 = 0, t2 = len;
+                if (optimize) {
+                    // 求线段与"以玩家为圆心、渲染距离为半径"的圆的交点。
+                    // 令 s = t / len ∈ [0,1]，P(s) = a + (b-a)*s，解 |P(s) - player|² = maxSq
+                    double fx = a.x - px, fz = a.z - pz;
+                    double A = dx * dx + dz * dz;            // |b-a|²
+                    double B = 2.0 * (fx * dx + fz * dz);
+                    double C = fx * fx + fz * fz - maxSq;
+                    if (C > 0 && B >= 0) continue;           // a 在圈外且整段远离玩家
+                    double disc = B * B - 4.0 * A * C;
+                    if (disc <= 0) continue;                 // 与圆无交
+                    double sq = Math.sqrt(disc);
+                    double s1 = Math.max(0.0, (-B - sq) / (2.0 * A));
+                    double s2 = Math.min(1.0, (-B + sq) / (2.0 * A));
+                    if (s1 >= s2) continue;
+                    t1 = s1 * len;
+                    t2 = s2 * len;
+                } else {
+                    // 旧行为：两端都在圈外就整段跳过
+                    double dax = a.x - px, daz = a.z - pz, dbx = b.x - px, dbz = b.z - pz;
+                    if (dax * dax + daz * daz > maxSq && dbx * dbx + dbz * dbz > maxSq) continue;
+                }
+
+                for (double t = t1; t < t2; t += step) {
                     double cx = a.x + ux * t, cz = a.z + uz * t;
                     event.renderer.box(
                         cx - ex, segY - 0.12, cz - ez,
